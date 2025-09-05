@@ -20,6 +20,44 @@ class NodoVecinos(Nodo):
         return f"Nodo: {self.id_nodo}, vecinos: {self.vecinos},identificadores: {self.identifiers}"
 
     def conoceVecinos(self, env):
-        ''' Algoritmo que hace que el nodo conozca a los vecinos de sus vecinos.
-            Lo guarda en la variable identifiers.'''
-     
+        "Implementacion del algoritmo"
+        self.canal_salida.envia(self.vecinos,self.vecinos)
+
+        while True  : # espera a que haya un mensjae en el canal 
+            mensaje  =  yield self.canal_entrada.get()  
+            self.identificadores.update(mensaje)
+            #print(self.toString()) #Mirar proceso de Ejecucion
+
+
+env = simpy.Environment()
+bc_pipe = CanalComuniacion(env)
+
+grafica =  [[1],[0,2,3],[1,4,5],[1],[2],[2]]
+sistema_distribuido =  []
+
+#tick = 1
+
+for i in range(0, len(grafica)):
+            sistema_distribuido.append(NodoVecino(i, grafica[i],
+                                       bc_pipe.crea_canal_entrada(), bc_pipe))
+
+                        
+for nodo in sistema_distribuido:
+    env.process(nodo.conoce_vecinos(env))
+
+
+env.run(until=10)
+
+#
+print("Grafica : ", grafica )
+print("Final de ejecucion")
+
+for nodo in sistema_distribuido :
+    print(nodo.toString())
+
+
+
+
+
+
+    
