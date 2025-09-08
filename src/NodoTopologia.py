@@ -2,11 +2,7 @@ import simpy
 import time
 from Nodo import *
 from Canales.CanalBroadcast import *
-
-import simpy
-import time
-from Nodo import *
-from Canales.CanalBroadcast import *
+from Canales.CanalComunicacion import CanalComunicacion
 
 # La unidad de tiempo
 TICK = 1
@@ -23,11 +19,11 @@ class NodoTopologia(Nodo):
         self.canal_entrada = canal_entrada 
         self.canal_salida = canal_salida 
         self.mensaje = mensaje
-        self.procesos_conocido =  {self.id_nodo}
+        self.proc_conocidos =  {self.id_nodo}
         self.canales_conocidos =  {(self.id_nodo,y)  for y in self.vecinos }
 
     def toString(self):
-        return f'Nodo : {self.id_nodo},\n vecinos: {self.vecinos},\nprocesos conocidos{self.procesos_conocido},\n canales_conocidos: {self.canales_conocidos}'
+        return f'Nodo : {self.id_nodo},\n vecinos: {self.vecinos},\nprocesos conocidos{self.proc_conocidos},\n canales_conocidos: {self.canales_conocidos}'
 
 
 
@@ -37,8 +33,8 @@ class NodoTopologia(Nodo):
         while True :
             mssg = yield  self.canal_entrada.get()
             k,vecinos_j = mssg[0], mssg[1]
-            if k not in self.procesos_conocido :
-                self.procesos_conocido.add(k)
+            if k not in self.proc_conocidos :
+                self.proc_conocidos.add(k)
                 #self.procesos_conocido.update({k})
                 nuevos_canales = {(k,l)  for l in vecinos_j}
                 self.canales_conocidos.update(nuevos_canales)
@@ -48,7 +44,7 @@ class NodoTopologia(Nodo):
                 todos_conocidos =  True 
 
                 for l,m in self.canales_conocidos :
-                    evaluador =  l in self.procesos_conocido  and m in self.procesos_conocido 
+                    evaluador =  l in self.proc_conocidos  and m in self.proc_conocidos 
                     todos_conocidos = todos_conocidos  and evaluador 
                 
                 if todos_conocidos :
@@ -57,7 +53,7 @@ class NodoTopologia(Nodo):
             
 
 env = simpy.Environment()
-bc_pipe = CanalComuniacion(env)
+bc_pipe = CanalComunicacion(env)
 
 grafica =  [[1,2],[0],[0,3],[2]]
 #grafica2 = [[1],[0,2,3],[1,4,5],[1],[2],[2]]
@@ -66,7 +62,7 @@ sistema_distribuido =  []
 tick = 1
 
 for i in range(0, len(grafica)):
-            sistema_distribuido.append(NodoTopo(i, grafica[i],
+            sistema_distribuido.append(NodoTopologia(i, grafica[i],
                                        bc_pipe.crea_canal_entrada(), bc_pipe))
 
                         

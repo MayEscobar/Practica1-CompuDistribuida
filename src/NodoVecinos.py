@@ -1,7 +1,7 @@
 import simpy
 from Nodo import *
 from Canales.CanalBroadcast import * ##Mayusculas 
-
+from Canales.CanalComunicacion import CanalComunicacion
 
 class NodoVecinos(Nodo):
     ''' Implementa la interfaz de Nodo para el algoritmo de conocer a los
@@ -17,7 +17,7 @@ class NodoVecinos(Nodo):
     
     def tostring(self):
         """Regresa la representacion en cadena del nodo."""
-        return f"Nodo: {self.id_nodo}, vecinos: {self.vecinos},identificadores: {self.identifiers}"
+        return f"Nodo: {self.id_nodo}, vecinos: {self.vecinos},identifiers: {self.identifiers}"
 
     def conoceVecinos(self, env):
         "Implementacion del algoritmo"
@@ -25,39 +25,32 @@ class NodoVecinos(Nodo):
 
         while True  : # espera a que haya un mensjae en el canal 
             mensaje  =  yield self.canal_entrada.get()  
-            self.identificadores.update(mensaje)
+            self.identifiers.update(mensaje)
             #print(self.toString()) #Mirar proceso de Ejecucion
 
+#-----------------
+if __name__ == "__main__":
+    env = simpy.Environment()
+    bc_pipe = CanalComunicacion(env)
 
-env = simpy.Environment()
-bc_pipe = CanalComuniacion(env)
+    grafica = [[1],[0,2,3],[1,4,5],[1],[2],[2]]
+    sistema_distribuido = []
 
-grafica =  [[1],[0,2,3],[1,4,5],[1],[2],[2]]
-sistema_distribuido =  []
+    for i in range(len(grafica)):
+        sistema_distribuido.append(
+            NodoVecinos(i, grafica[i], bc_pipe.crea_canal_entrada(), bc_pipe)
+        )
 
-#tick = 1
+    for nodo in sistema_distribuido:
+        env.process(nodo.conoceVecinos(env))
 
-for i in range(0, len(grafica)):
-            sistema_distribuido.append(NodoVecino(i, grafica[i],
-                                       bc_pipe.crea_canal_entrada(), bc_pipe))
+    env.run(until=10)
 
-                        
-for nodo in sistema_distribuido:
-    env.process(nodo.conoce_vecinos(env))
-
-
-env.run(until=10)
-
-#
-print("Grafica : ", grafica )
-print("Final de ejecucion")
-
-for nodo in sistema_distribuido :
-    print(nodo.toString())
-
-
-
-
+    print("Grafica:", grafica)
+    print("Final de ejecucion")
+    for nodo in sistema_distribuido:
+        print(nodo.toString())
+        
 
 
     
